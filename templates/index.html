@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wine Quality Predictor</title>
+    <style>
+        .min-max, .slider-value {
+            color: red;
+        }
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .output {
+            margin-left: 20px;
+        }
+        .slider-value {
+            display: inline-block;
+            width: 50px;
+            text-align: center;
+        }
+        .predictor-slider::-webkit-slider-thumb {
+            background-color: red;
+        }
+        .predictor-slider::-moz-range-thumb {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wine Quality Predictor</h1>
+    <div class="container">
+        <form id="prediction-form" action="/predict" method="post">
+            {% for predictor, (min_val, max_val) in predictor_ranges.items() %}
+                <label for="{{ predictor }}">{{ predictor }} (<span class="min-max">{{ min_val }}</span> - <span class="min-max">{{ max_val }}</span>):</label><br>
+                <input type="range" id="{{ predictor }}" name="{{ predictor }}" class="predictor-slider" min="{{ min_val }}" max="{{ max_val }}" step="0.01">
+                <span class="slider-value" id="{{ predictor }}-value"></span><br><br>
+            {% endfor %}
+            <input type="submit" value="Predict" style="display: none;">
+        </form>
+        <div class="output">
+            <div id="prediction-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        form.addEventListener('input', function(event) {
+            event.preventDefault();
+            const formData = new FormData(form);
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                document.getElementById('prediction-result').innerHTML = result;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        const sliders = document.querySelectorAll('.predictor-slider');
+        sliders.forEach(function(slider) {
+            const sliderValue = document.getElementById(slider.id + '-value');
+            sliderValue.textContent = slider.value;
+            slider.addEventListener('input', function() {
+                sliderValue.textContent = this.value;
+            });
+        });
+    </script>
+</body>
+</html>
+
+
